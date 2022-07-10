@@ -6,16 +6,19 @@ using UnityEditor;
 using UnityEngine;
 using SLywnow;
 using System;
-using System.Globalization;
+using System.Threading.Tasks;
 
 public class KPSL_Editor_Main : EditorWindow
 {
 	KPSL_Editor_MainConfig config = new KPSL_Editor_MainConfig();
 	bool enabled = false;
 	List<KPSL_Editor_Snapshots> snapshots;
+	string datapath;
 
 	void OnEnable()
     {
+		datapath = Application.dataPath.Replace("/Assets", "");
+
 		//loadcfg
 
 		config.Load();
@@ -39,8 +42,10 @@ public class KPSL_Editor_Main : EditorWindow
 
 	string serverdir = "";
 	Vector2 snappos;
+	bool working;
+	string workingStatus;
 
-    void OnGUI()
+	void OnGUI()
     {
 		GUIStyle style = new GUIStyle();
 		style.richText = true;
@@ -49,14 +54,23 @@ public class KPSL_Editor_Main : EditorWindow
 		serverdir = EditorGUILayout.TextField("", serverdir);
 		if (GUILayout.Button("Save & Check"))
 		{
-			if (serverdir[serverdir.Length - 1] == '/' || serverdir[serverdir.Length - 1] == '\\')
-				serverdir.Remove(serverdir.Length - 1);
-			config.serverdir = serverdir;
-			config.Save();
+			if (!string.IsNullOrEmpty(serverdir))
+			{
+				if (serverdir[serverdir.Length - 1] == '/' || serverdir[serverdir.Length - 1] == '\\')
+					serverdir.Remove(serverdir.Length - 1);
+				config.serverdir = serverdir;
+				config.Save();
 
-			if (FilesSet.CheckFile(config.serverdir + "/kopia.exe"))
-				enabled = true;
-			CheckAndLoad();
+				if (FilesSet.CheckFile(config.serverdir + "/kopia.exe"))
+				{
+					enabled = true;
+					CheckAndLoad();
+				}
+				else
+					enabled = false;
+			}
+			else
+				serverdir = config.serverdir;
 		}
 		EditorGUILayout.EndHorizontal();
 		
@@ -65,56 +79,97 @@ public class KPSL_Editor_Main : EditorWindow
 
 		if (enabled)
 		{
-			EditorGUILayout.BeginHorizontal();
-			if (GUILayout.Button("Create new snapshot"))
+			if (!working)
 			{
-				runProc("snapshot create " + "\"" + Application.dataPath.Replace("/Assets", "") + "\"");
-				CheckAndLoad();
-			}
-			if (GUILayout.Button("Refresh list"))
-			{
-				CheckAndLoad();
-			}
-			EditorGUILayout.EndHorizontal();
-
-			EditorGUILayout.Space();
-
-			snappos = GUILayout.BeginScrollView(snappos, style);
-
-			if (snapshots.Count == 0)
-				GUILayout.Label("There's no snapshots, create one!");
-
-			for (int i =snapshots.Count-1;i>=0;i--)
-			{
-				int id = i;
-				KPSL_Editor_Snapshots s = snapshots[id];
-				s.show = EditorGUILayout.BeginFoldoutHeaderGroup(s.show, s.data.ToString());
-				if (s.show)
+				EditorGUILayout.BeginHorizontal();
+				if (GUILayout.Button("Create new snapshot"))
 				{
-					GUILayout.Label(s.ind);
-					GUILayout.Label("Size: " + s.size);
-					GUILayout.Label("Files: " + s.files);
-					GUILayout.Label("Directories: "+ s.dirs);
-
-					EditorGUILayout.BeginHorizontal();
-					if (GUILayout.Button("Restore this"))
-					{
-						runProc("snapshot restore " + s.ind);
-					}
-					if (GUILayout.Button("Delete"))
-					{
-						runProc("snapshot delete " + s.ind +" --delete");
-					}
-					EditorGUILayout.EndHorizontal();
+					NewSnapshotAsync();
 				}
-				EditorGUILayout.EndFoldoutHeaderGroup();
+				if (GUILayout.Button("Refresh list"))
+				{
+					CheckAndLoad();
+				}
+				EditorGUILayout.EndHorizontal();
+
+				EditorGUILayout.Space();
+
+				snappos = GUILayout.BeginScrollView(snappos, style);
+
+				if (snapshots.Count == 0)
+					GUILayout.Label("There's no snapshots, create one!");
+
+				for (int i = snapshots.Count - 1; i >= 0; i--)
+				{
+					int id = i;
+					KPSL_Editor_Snapshots s = snapshots[id];
+					s.show = EditorGUILayout.BeginFoldoutHeaderGroup(s.show, s.data.ToString());
+					if (s.show)
+					{
+						GUILayout.Label(s.ind);
+						GUILayout.Label("Size: " + s.size);
+						GUILayout.Label("Files: " + s.files);
+						GUILayout.Label("Directories: " + s.dirs);
+
+						EditorGUILayout.BeginHorizontal();
+						if (GUILayout.Button("Restore this"))
+						{
+							RestoreSnapshot(s);
+						}
+						if (GUILayout.Button("Delete"))
+						{
+							DeleteSnapshot(s);
+						}
+						EditorGUILayout.EndHorizontal();
+					}
+					EditorGUILayout.EndFoldoutHeaderGroup();
+				}
+				GUILayout.EndScrollView();
 			}
-			GUILayout.EndScrollView();
+			else
+			{
+				EditorGUI.ProgressBar(new Rect(3, 45, position.width - 6, 20), 100f, workingStatus);
+			}
 		}
 		else
-			GUILayout.Label("Please input path to kopia.exe",style);
+			GUILayout.Label("Please input path to folder with kopia.exe");
 	}
 
+	async void NewSnapshotAsync()
+	{
+		if (!working)
+		{
+			working = true;
+			workingStatus = "Creating new snapshot...";
+			await Task.Run(() => runProc("snapshot create " + "\"" + datapath + "\""));
+			working = false;
+			CheckAndLoad();
+		}
+	}
+
+	async void DeleteSnapshot(KPSL_Editor_Snapshots s)
+	{
+		if (!working)
+		{
+			working = true;
+			workingStatus = "Deleting snapshot " + s.data + " " + s.ind + "...";
+			await Task.Run(() => runProc("snapshot delete " + s.ind + " --delete"));
+			working = false;
+			CheckAndLoad();
+		}
+	}
+
+	async void RestoreSnapshot(KPSL_Editor_Snapshots s)
+	{
+		if (!working)
+		{
+			working = true;
+			workingStatus = "Restoring snapshot " + s.data + " " + s.ind + "...";
+			await Task.Run(() => runProc("snapshot restore " + s.ind));
+			working = false;
+			CheckAndLoad();
+		}
+	}
 
 	string runProc(string args)
 	{
@@ -143,7 +198,7 @@ public class KPSL_Editor_Main : EditorWindow
 	void CheckAndLoad()
 	{
 		
-		string output = runProc("snapshot list " + "\"" + Application.dataPath.Replace("/Assets", "") + "\"");
+		string output = runProc("snapshot list " + "\"" + datapath + "\"");
 
 		List<string> outputs = output.Split('\n').ToList();
 		snapshots = new List<KPSL_Editor_Snapshots>();
