@@ -11,7 +11,6 @@ Asset for convenient use of [kopia](https://github.com/kopia/kopia "kopia")
 # **How to use**
 ### **Create new snapshot**
 Creates new snapshot, it'll copy full project folder, except Temp
-Warning, that may freeze Unity, especially at first time, just eait a few minutes (or seconds)
 
 ### **Refresh list**
 Refreshes list of all snapshots
@@ -19,9 +18,11 @@ Refreshes list of all snapshots
 ### **Snapshot**
 You can open additional info about snapshot, also, you can remove or restore this snapshot (warning, recovery does not delete new files, only overwrites existing ones)
 
+### **While working**
+When asset working all GUI vanish  and you see status of current task
+
 
 # **TO DO**
 - Create system to view snapshot's files
 - Create system to autorun server
-- Move working with files to another thread to fix unity freezing
 - Fix bugs
