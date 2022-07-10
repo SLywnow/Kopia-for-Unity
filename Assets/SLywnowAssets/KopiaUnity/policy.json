@@ -1,0 +1,24 @@
+{
+    "retention": {},
+    "files": {
+        "ignoreDotFiles": [
+            "AtlasCache",
+            "TempArtifacts",
+            "Temp",
+            "StateCache",
+            "ShaderCache",
+            "PlayerDataCache",
+            "PackageCache"
+        ],
+        "ignoreCacheDirs": true
+    },
+    "errorHandling": {},
+    "scheduling": {},
+    "compression": {},
+    "actions": {},
+    "logging": {
+        "directories": {},
+        "entries": {}
+    },
+    "upload": {}
+}
