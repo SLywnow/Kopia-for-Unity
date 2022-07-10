@@ -12,7 +12,7 @@ Asset for convenient use of [kopia](https://github.com/kopia/kopia "kopia")
 Creates new snapshot, it'll copy full project folder, except Temp
 
 ### **Refresh list**
-Refrest list of all snapshots
+Refreshes list of all snapshots
 
 ### **Snapshot**
 You can open additional info about snapshot, also, you can remove or restore this snapshot (warning, recovery does not delete new files, only overwrites existing ones)
