@@ -2,7 +2,7 @@ Asset for convenient use of [kopia](https://github.com/kopia/kopia "kopia")
 
 # **How to install**
 1. Launch kopia GUI or launch kopia server
-2. Install Asset: merge the Assets folder of your project with the Assets folder of this repository and install [SLywnow basic] (https://github.com/SLywnow/slywnow_basic)
+2. Install Asset: merge the Assets folder of your project with the Assets folder of this repository and install [SLywnow basic](https://github.com/SLywnow/slywnow_basic)
 3. Open the SLywnow/Kopia UI window
 4. Set path to kopia.exe file, example: C:\KopiaUI\resources\server (only folder, not file) and press Save & Check
 5. If you set right path and server started, then button "Create new snapshot" appears
