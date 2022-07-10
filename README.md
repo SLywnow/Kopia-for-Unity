@@ -8,11 +8,11 @@ Asset for convenient use of [kopia](https://github.com/kopia/kopia "kopia")
 5. If you set right path and server started, then button "Create new snapshot" appears
 
 # **How to use**
-### Create new snapshot
+### **Create new snapshot**
 Creates new snapshot, it'll copy full project folder, except Temp
 
-### Refresh list
+### **Refresh list**
 Refrest list of all snapshots
 
-### Snapshot
+### **Snapshot**
 You can open additional info about snapshot, also, you can remove or restore this snapshot (warning, recovery does not delete new files, only overwrites existing ones)
