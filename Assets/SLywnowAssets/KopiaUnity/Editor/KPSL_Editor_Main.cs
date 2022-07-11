@@ -531,7 +531,7 @@ public class KPSL_Editor_Main : EditorWindow
 		foreach (string s in fileList)
 			id += s + "/";
 		string output = "";
-		await Task.Run(() => output = runProc("list -l " + id));
+		await Task.Run(() => output = runProc("list -l \"" + id + "\""));
 		foreach (string s in output.Split('\n').ToList())
 		{
 			if (!string.IsNullOrEmpty(s) && (!s.Contains(".meta") || config.showmeta))
@@ -577,9 +577,12 @@ public class KPSL_Editor_Main : EditorWindow
 
 		files.Sort((x, y) =>
 		{
-			if (x.folder && y.folder) return x.name.CompareTo(y.name);
+			if (x.folder && y.folder && x.name != null && y.name != null) return x.name.CompareTo(y.name);
 			else if (x.folder && !y.folder) return -1;
 			else if (!x.folder && y.folder) return 1;
+			else if (x.name == null && y.name == null) return 0;
+			else if (x.name == null) return -1;
+			else if (y.name == null) return 1;
 			else return x.name.CompareTo(y.name);
 		});
 
