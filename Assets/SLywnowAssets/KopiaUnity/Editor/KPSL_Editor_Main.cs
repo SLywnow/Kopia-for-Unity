@@ -287,7 +287,7 @@ public class KPSL_Editor_Main : EditorWindow
 					GUILayout.EndHorizontal();
 
 					GUILayout.BeginHorizontal();
-					GUILayout.Label("Dont rewrite files when restore:", GUILayout.Width(200));
+					GUILayout.Label("Don't rewrite files when restore:", GUILayout.Width(200));
 					config.dontrewrite = EditorGUILayout.Toggle(config.dontrewrite);
 					GUILayout.EndHorizontal();
 
