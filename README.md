@@ -28,3 +28,4 @@ When asset working all GUI vanish  and you see status of current task
 # **TO DO**
 - Create system to autorun server
 - Fix bugs
+- Fix bug "Getting control 4's position in a group with only 4 controls when doing repaint" when open file browser
