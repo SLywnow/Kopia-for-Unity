@@ -27,7 +27,7 @@ Also, on top you can see current path.
 ### **While working**
 When asset working all GUI vanishes and you see status of current task
 
-# **Settings**
+### **Settings**
 To open settings click on settings icon on top right
 
 - Path to exe: path to kopia.exe file, example: C:\KopiaUI\resources\server (only folder, not file) 
@@ -39,7 +39,7 @@ Save button will save new settings, Cancel will return data back to old config
 
 All data stores in config.cfg file in KopiaUnity's folder
 
-# **Console**
+### **Console**
 To open console click on console icon on top right
 
 You can enter any kopia commands here, returns will be showed in Unity's console. But I recommends to use classical console for that.
