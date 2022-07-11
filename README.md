@@ -18,7 +18,7 @@ Refreshes list of all snapshots
 ### **Snapshot**
 You can open additional info about snapshot, also, you can remove or restore this snapshot. Also, you can see files in snapshot, see [File browsing](https://github.com/SLywnow/Kopia-for-Unity/blob/main/README.md#File_browsing "@File browsing") for more info.
 
-###File browsing
+### **File browsing**
 You can see all files and directories in snapshot. You can restore any file or directory by press "Restore" button on right. To move back press "To the top" or "Close" on top.
 
 ### **While working**
