@@ -30,6 +30,6 @@ When asset working all GUI vanish  and you see status of current task
 - Fix bugs
 - Fix bug "Getting control 4's position in a group with only 4 controls when doing repaint" when open file browser
 - Add settings:
-	- Show .meta files in browse
+	- Show .meta files in file browser
 	- Dont rewrite directories and files
 	- Create snapshow only for Assets folder
