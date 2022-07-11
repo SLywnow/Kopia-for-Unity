@@ -29,3 +29,7 @@ When asset working all GUI vanish  and you see status of current task
 - Create system to autorun server
 - Fix bugs
 - Fix bug "Getting control 4's position in a group with only 4 controls when doing repaint" when open file browser
+- Add settings:
+	- Show .meta files in browse
+	- Dont rewrite directories and files
+	- Create snapshow only for Assets folder
