@@ -33,3 +33,4 @@ When asset working all GUI vanish  and you see status of current task
 	- Show .meta files in file browser
 	- Dont rewrite directories and files
 	- Create snapshow only for Assets folder
+- Add console line
