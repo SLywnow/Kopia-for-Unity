@@ -21,7 +21,8 @@ Refreshes list of all snapshots
 You can open additional info about snapshot, also, you can remove or restore this snapshot. Also, you can see files in snapshot, see [File browsing](https://github.com/SLywnow/Kopia-for-Unity/blob/main/README.md#file-browsing) for more info.
 
 ### **File browsing**
-You can see all files and directories in snapshot. You can restore any file or directory by pressing "Restore" button on right. To move back press "To the top" or "Close" on top.
+You can see all files and directories in snapshot and their size. You can restore any file or directory by pressing "Restore" button on right. To move back press "To the top" or "Close" on top.
+Also, on top you can see current path.
 
 ### **While working**
 When asset working all GUI vanishes and you see status of current task
