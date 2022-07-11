@@ -24,13 +24,20 @@ You can see all files and directories in snapshot. You can restore any file or d
 ### **While working**
 When asset working all GUI vanish  and you see status of current task
 
+# **Settings**
+To open settings click on settings icon on top right
+
+- Path to exe: path to kopia.exe file, example: C:\KopiaUI\resources\server (only folder, not file) 
+- Show .meta files: shows .meta files in file browser
+- Snapshot only Asset folder: create snapshot only for Assets folder, instead of full project
+- Dont rewrite files when restore: Only new or deleted files will be writen when you restore data
+
+Save button will save new settings, Cancel will return data back to old config
+
+All data stored in config.cfg file in KopiaUnity's folder
 
 # **TO DO**
 - Create system to autorun server
 - Fix bugs
 - Fix bug "Getting control 4's position in a group with only 4 controls when doing repaint" when open file browser
-- Add settings:
-	- Show .meta files in file browser
-	- Dont rewrite directories and files
-	- Create snapshow only for Assets folder
 - Add console line
