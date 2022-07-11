@@ -15,6 +15,8 @@ public class KPSL_Editor_Main : EditorWindow
 	List<KPSL_Editor_Snapshots> snapshots;
 	string datapath;
 
+	Texture2D refreshIcon;
+
 	void OnEnable()
     {
 		datapath = Application.dataPath.Replace("/Assets", "");
@@ -38,15 +40,29 @@ public class KPSL_Editor_Main : EditorWindow
 
 		//UnityEngine.Debug.Log(Application.dataPath);
 		//UnityEngine.Debug.Log("snapshot list " + "\"" + Application.dataPath + "\"");
+
+		if (FilesSet.CheckFile(Application.dataPath + "/SLywnowAssets/KopiaUnity/Textures/refresh.png"))
+		{
+			refreshIcon = FilesSet.LoadSprite(Application.dataPath + "/SLywnowAssets/KopiaUnity/Textures/refresh.png", false).texture;
+		}
+		else
+			refreshIcon = null;
+
 	}
 
 	string serverdir = "";
 	Vector2 snappos;
+	Vector2 filepos;
 	bool working;
 	string workingStatus;
 
+	bool fileBrowser = false;
+	int filePos;
+	List<string> fileList;
+	List<KPSL_Editor_File> files;
+
 	void OnGUI()
-    {
+	{
 		GUIStyle style = new GUIStyle();
 		style.richText = true;
 
@@ -73,7 +89,7 @@ public class KPSL_Editor_Main : EditorWindow
 				serverdir = config.serverdir;
 		}
 		EditorGUILayout.EndHorizontal();
-		
+
 		EditorGUILayout.Space();
 		EditorGUILayout.Space();
 
@@ -81,58 +97,197 @@ public class KPSL_Editor_Main : EditorWindow
 		{
 			if (!working)
 			{
-				EditorGUILayout.BeginHorizontal();
-				if (GUILayout.Button("Create new snapshot"))
+				if (!fileBrowser)
 				{
-					NewSnapshotAsync();
-				}
-				if (GUILayout.Button("Refresh list"))
-				{
-					CheckAndLoad();
-				}
-				EditorGUILayout.EndHorizontal();
-
-				EditorGUILayout.Space();
-
-				snappos = GUILayout.BeginScrollView(snappos, style);
-
-				if (snapshots.Count == 0)
-					GUILayout.Label("There's no snapshots, create one!");
-
-				for (int i = snapshots.Count - 1; i >= 0; i--)
-				{
-					int id = i;
-					KPSL_Editor_Snapshots s = snapshots[id];
-					s.show = EditorGUILayout.BeginFoldoutHeaderGroup(s.show, s.data.ToString());
-					if (s.show)
+					EditorGUILayout.BeginHorizontal();
+					if (GUILayout.Button("Create new snapshot"))
 					{
-						GUILayout.Label(s.ind);
-						GUILayout.Label("Size: " + s.size);
-						GUILayout.Label("Files: " + s.files);
-						GUILayout.Label("Directories: " + s.dirs);
-
-						EditorGUILayout.BeginHorizontal();
-						if (GUILayout.Button("Restore this"))
-						{
-							RestoreSnapshot(s);
-						}
-						if (GUILayout.Button("Delete"))
-						{
-							DeleteSnapshot(s);
-						}
-						EditorGUILayout.EndHorizontal();
+						NewSnapshotAsync();
 					}
-					EditorGUILayout.EndFoldoutHeaderGroup();
+					if (refreshIcon == null)
+					{
+						if (GUILayout.Button("Refresh list"))
+						{
+							CheckAndLoad();
+						}
+					}
+					else
+					{
+						if (GUILayout.Button(new GUIContent(refreshIcon), GUILayout.Width(19), GUILayout.Height(19)))
+						{
+							CheckAndLoad();
+						}
+					}
+					EditorGUILayout.EndHorizontal();
+
+					EditorGUILayout.Space();
+
+					snappos = GUILayout.BeginScrollView(snappos, style);
+
+					if (snapshots.Count == 0)
+						GUILayout.Label("There's no snapshots, create one!");
+
+					for (int i = snapshots.Count - 1; i >= 0; i--)
+					{
+						int id = i;
+						KPSL_Editor_Snapshots s = snapshots[id];
+						s.show = EditorGUILayout.BeginFoldoutHeaderGroup(s.show, s.data.ToString());
+						if (s.show)
+						{
+							GUILayout.Label(s.ind);
+							GUILayout.Label("Size: " + s.size);
+							GUILayout.Label("Files: " + s.files);
+							GUILayout.Label("Directories: " + s.dirs);
+
+							if (GUILayout.Button("Show files"))
+							{
+								fileBrowser = true;
+								fileList = new List<string>();
+								fileList.Add(s.ind);
+							}
+
+							EditorGUILayout.BeginHorizontal();
+							if (GUILayout.Button("Restore this"))
+							{
+								RestoreSnapshot(s);
+							}
+							if (GUILayout.Button("Delete"))
+							{
+								DeleteSnapshot(s);
+							}
+							EditorGUILayout.EndHorizontal();
+						}
+						EditorGUILayout.EndFoldoutHeaderGroup();
+					}
+					GUILayout.EndScrollView();
 				}
-				GUILayout.EndScrollView();
+				else
+				{
+					if (fileList.Count == 1)
+					{
+						if (GUILayout.Button("Close"))
+						{
+							fileBrowser = false;
+							fileList = new List<string>();
+						}
+					}
+					else
+					{
+						if (GUILayout.Button("To the top"))
+						{
+							fileList.RemoveAt(fileList.Count - 1);
+						}
+					}
+
+					if (filePos != fileList.Count)
+					{
+						OpenFiles();
+						filePos = fileList.Count;
+					}
+					else
+					{
+						filepos = GUILayout.BeginScrollView(filepos, style);
+						foreach (KPSL_Editor_File file in files)
+						{
+							EditorGUILayout.BeginHorizontal();
+
+							if (file.folder)
+							{
+								if (GUILayout.Button(file.name + " " + file.size))
+								{
+									fileList.Add(file.name);
+								}
+							}
+							else
+								GUILayout.Label(file.name + " " + file.size);
+
+							if (GUILayout.Button("Restore", GUILayout.Width(100)))
+							{
+								string path = "";
+								foreach (string s in fileList)
+									path += s + "/";
+								path += file.name;
+
+								string realpath = path.Replace(fileList[0] + "/", "");
+
+								RestoreSnapshot(path, realpath);
+							}
+
+							EditorGUILayout.EndHorizontal();
+						}
+						GUILayout.EndScrollView();
+					}
+				}
 			}
 			else
 			{
 				EditorGUI.ProgressBar(new Rect(3, 45, position.width - 6, 20), 100f, workingStatus);
+				EditorGUI.LabelField(new Rect(3, 70, position.width - 6, 20), "<color=red><b>DONT CLOSE UNITY!</b></color>", style);
 			}
 		}
 		else
 			GUILayout.Label("Please input path to folder with kopia.exe");
+	}
+
+	async void OpenFiles()
+	{
+		files = new List<KPSL_Editor_File>();
+
+		string id = "";
+		foreach (string s in fileList)
+			id += s + "/";
+		string output = "";
+		await Task.Run(() => output = runProc("list -l " + id));
+		foreach (string s in output.Split('\n').ToList())
+		{
+			if (!string.IsNullOrEmpty(s) && !s.Contains(".meta"))
+			{
+				List<string> str = s.Split(" ").ToList();
+
+				//check is that directory or file
+				bool file = true;
+				if (str[0][0] == 'd')
+				{
+					file = false;
+				}
+
+				//look for data
+				for (int i = 0; i < str.Count; i++)
+				{
+					if (int.TryParse(str[i], out int r))
+					{
+						files.Add(new KPSL_Editor_File());
+						files[files.Count - 1].folder = !file;
+						files[files.Count - 1].size = r;
+						files[files.Count - 1].ind = str[i + 4];
+						if (file)
+						{
+							for (int n = i + 7; n < str.Count; n++)
+								if (n != str.Count - 1)
+									files[files.Count - 1].name += str[n] + " ";
+								else
+									files[files.Count - 1].name += str[n];
+						}
+						else
+							for (int n = i + 6; n < str.Count; n++)
+								if (n != str.Count - 1)
+									files[files.Count - 1].name += str[n] + " ";
+								else
+									files[files.Count - 1].name += str[n];
+
+						break;
+					}
+				}
+			}
+		}
+
+		files.Sort((x, y) =>
+		{
+			if (x.name == null && y.name == null) return 0;
+			else if (x.name == null) return -1;
+			else if (y.name == null) return 1;
+			else return x.name.CompareTo(y.name);
+		});
 	}
 
 	async void NewSnapshotAsync()
@@ -165,7 +320,20 @@ public class KPSL_Editor_Main : EditorWindow
 		{
 			working = true;
 			workingStatus = "Restoring snapshot " + s.data + " " + s.ind + "...";
-			await Task.Run(() => runProc("snapshot restore " + s.ind));
+			await Task.Run(() => runProc("snapshot restore " + s.ind + " \"" + datapath + "\" --overwrite-directories --overwrite-files"));
+			working = false;
+			CheckAndLoad();
+		}
+	}
+
+	async void RestoreSnapshot(string filepath, string realfilepath)
+	{
+		if (!working)
+		{
+			working = true;
+			workingStatus = "Restoring snapshot file " + filepath + "...";
+			//UnityEngine.Debug.Log("snapshot restore " + "\"" + filepath + "\" \"" + datapath + "/" + realfilepath + "\" --overwrite-directories --overwrite-files");
+			await Task.Run(() => runProc("snapshot restore " + "\"" + filepath + "\" \"" + datapath+"/"+ filepath + "\" --overwrite-directories --overwrite-files"));
 			working = false;
 			CheckAndLoad();
 		}
@@ -218,6 +386,15 @@ public class KPSL_Editor_Main : EditorWindow
 				}
 			}
 	}
+}
+
+[System.Serializable]
+public class KPSL_Editor_File
+{
+	public string name;
+	public int size;
+	public string ind;
+	public bool folder;
 }
 
 [System.Serializable]
