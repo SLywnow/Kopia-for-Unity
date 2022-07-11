@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -11,20 +11,31 @@ using System.Threading.Tasks;
 public class KPSL_Editor_Main : EditorWindow
 {
 	KPSL_Editor_MainConfig config = new KPSL_Editor_MainConfig();
+	KPSL_Editor_MainConfig preconfig = new KPSL_Editor_MainConfig();
 	bool enabled = false;
 	List<KPSL_Editor_Snapshots> snapshots;
 	string datapath;
 
 	Texture2D refreshIcon;
+	Texture2D settingsIcon;
+	Texture2D mainIcon;
+	Texture2D consoleIcon;
+
+	public KPSL_Editor_ConsoleHelp consoleHelp;
+	public KPSL_Editor_ConsoleHelp currHelp;
 
 	void OnEnable()
     {
-		datapath = Application.dataPath.Replace("/Assets", "");
-
 		//loadcfg
 
 		config.Load();
 		serverdir = config.serverdir;
+
+		if (!config.snaponlyassets)
+			datapath = Application.dataPath.Replace("/Assets", "");
+		else
+			datapath = Application.dataPath;
+
 
 		if (FilesSet.CheckFile(config.serverdir + "/kopia.exe"))
 		{
@@ -33,7 +44,7 @@ public class KPSL_Editor_Main : EditorWindow
 			//runProc("policy set +" + "\"" + Application.dataPath + "/SLywnowAssets/KopiaUnity/policy.json" + "\"");
 			runProc("policy set --global --ignore-cache-dirs true");
 			runProc("policy set --global --add-ignore Temp");
-			runProc("policy set --global --add-dot-ignore AtlasCache,TempArtifacts,Temp,StateCache,ShaderCache,PlayerDataCache,PackageCache");
+			runProc("policy set --global --add-dot-ignore \"AtlasCache, TempArtifacts, Temp, StateCache, ShaderCache, PlayerDataCache, PackageCache\"");
 
 			CheckAndLoad();
 		}
@@ -41,6 +52,7 @@ public class KPSL_Editor_Main : EditorWindow
 		//UnityEngine.Debug.Log(Application.dataPath);
 		//UnityEngine.Debug.Log("snapshot list " + "\"" + Application.dataPath + "\"");
 
+		//get icons
 		if (FilesSet.CheckFile(Application.dataPath + "/SLywnowAssets/KopiaUnity/Textures/refresh.png"))
 		{
 			refreshIcon = FilesSet.LoadSprite(Application.dataPath + "/SLywnowAssets/KopiaUnity/Textures/refresh.png", false).texture;
@@ -48,15 +60,103 @@ public class KPSL_Editor_Main : EditorWindow
 		else
 			refreshIcon = null;
 
+		if (FilesSet.CheckFile(Application.dataPath + "/SLywnowAssets/KopiaUnity/Textures/settings.png"))
+		{
+			settingsIcon = FilesSet.LoadSprite(Application.dataPath + "/SLywnowAssets/KopiaUnity/Textures/settings.png", false).texture;
+		}
+		else
+			refreshIcon = null;
+
+		if (FilesSet.CheckFile(Application.dataPath + "/SLywnowAssets/KopiaUnity/Textures/kopiaforunity.png"))
+		{
+			mainIcon = FilesSet.LoadSprite(Application.dataPath + "/SLywnowAssets/KopiaUnity/Textures/kopiaforunity.png", false).texture;
+		}
+		else
+			mainIcon = null;
+
+		if (FilesSet.CheckFile(Application.dataPath + "/SLywnowAssets/KopiaUnity/Textures/console.png"))
+		{
+			consoleIcon = FilesSet.LoadSprite(Application.dataPath + "/SLywnowAssets/KopiaUnity/Textures/console.png", false).texture;
+		}
+		else
+			consoleIcon = null;
+
+		//generate console help
+		consoleHelp = new KPSL_Editor_ConsoleHelp();
+		consoleInput = "";
+
+		consoleHelp.help = new List<KPSL_Editor_ConsoleHelp>();
+
+		consoleHelp.help.Add(new KPSL_Editor_ConsoleHelp());
+		{
+			consoleHelp.help[0].text = "list";
+			consoleHelp.help[0].help = new List<KPSL_Editor_ConsoleHelp>();
+			consoleHelp.help[0].help.Add(new KPSL_Editor_ConsoleHelp());
+			{
+				consoleHelp.help[0].help[0].text = "-l";
+				consoleHelp.help[0].help[0].help = new List<KPSL_Editor_ConsoleHelp>();
+			}
+		}
+		consoleHelp.help.Add(new KPSL_Editor_ConsoleHelp());
+		{
+			consoleHelp.help[1].text = "snapshot";
+			consoleHelp.help[1].help = new List<KPSL_Editor_ConsoleHelp>();
+			consoleHelp.help[1].help.Add(new KPSL_Editor_ConsoleHelp());
+			{
+				consoleHelp.help[1].help[0].text = "create";
+				consoleHelp.help[1].help[0].help = new List<KPSL_Editor_ConsoleHelp>();
+				consoleHelp.help[1].help[0].help.Add(new KPSL_Editor_ConsoleHelp());
+				{
+					consoleHelp.help[1].help[0].help[0].text = datapath;
+					consoleHelp.help[1].help[0].help[0].help = new List<KPSL_Editor_ConsoleHelp>();
+				}
+			}
+			consoleHelp.help[1].help.Add(new KPSL_Editor_ConsoleHelp());
+			{
+				consoleHelp.help[1].help[1].text = "list";
+				consoleHelp.help[1].help[1].help = new List<KPSL_Editor_ConsoleHelp>();
+			}
+			consoleHelp.help[1].help.Add(new KPSL_Editor_ConsoleHelp());
+			{
+				consoleHelp.help[1].help[2].text = "migrate";
+				consoleHelp.help[1].help[2].help = new List<KPSL_Editor_ConsoleHelp>();
+			}
+			consoleHelp.help[1].help.Add(new KPSL_Editor_ConsoleHelp());
+			{
+				consoleHelp.help[1].help[3].text = "restore";
+				consoleHelp.help[1].help[3].help = new List<KPSL_Editor_ConsoleHelp>();
+			}
+			consoleHelp.help[1].help.Add(new KPSL_Editor_ConsoleHelp());
+			{
+				consoleHelp.help[1].help[4].text = "delete";
+				consoleHelp.help[1].help[4].help = new List<KPSL_Editor_ConsoleHelp>();
+			}
+			consoleHelp.help[1].help.Add(new KPSL_Editor_ConsoleHelp());
+			{
+				consoleHelp.help[1].help[5].text = "fix invalid-files";
+				consoleHelp.help[1].help[5].help = new List<KPSL_Editor_ConsoleHelp>();
+			}
+			consoleHelp.help[1].help.Add(new KPSL_Editor_ConsoleHelp());
+			{
+				consoleHelp.help[1].help[6].text = "fix remove-files";
+				consoleHelp.help[1].help[6].help = new List<KPSL_Editor_ConsoleHelp>();
+			}
+		}
+
+		currHelp = consoleHelp;
 	}
 
+
 	string serverdir = "";
+	string consoleInput;
 	Vector2 snappos;
 	Vector2 filepos;
+	Vector2 conspos;
 	bool working;
 	string workingStatus;
 
-	bool fileBrowser = false;
+	enum oM { basic, files, settings, console };
+	oM openMode = oM.basic;
 	int filePos;
 	List<string> fileList;
 	List<KPSL_Editor_File> files;
@@ -66,47 +166,77 @@ public class KPSL_Editor_Main : EditorWindow
 		GUIStyle style = new GUIStyle();
 		style.richText = true;
 
-		EditorGUILayout.BeginHorizontal();
-		serverdir = EditorGUILayout.TextField("", serverdir);
-		if (GUILayout.Button("Save & Check"))
+		if (openMode != oM.settings)
 		{
-			if (!string.IsNullOrEmpty(serverdir))
+			EditorGUILayout.BeginHorizontal();
+			if (!enabled)
 			{
-				if (serverdir[serverdir.Length - 1] == '/' || serverdir[serverdir.Length - 1] == '\\')
-					serverdir.Remove(serverdir.Length - 1);
-				config.serverdir = serverdir;
-				config.Save();
-
-				if (FilesSet.CheckFile(config.serverdir + "/kopia.exe"))
+				GUILayout.Label("Path to exe:", GUILayout.Width(70));
+				serverdir = EditorGUILayout.TextField("", serverdir);
+				if (GUILayout.Button("Save & Check", GUILayout.Width(110)))
 				{
-					enabled = true;
-					CheckAndLoad();
+					if (!string.IsNullOrEmpty(serverdir))
+					{
+						if (serverdir[serverdir.Length - 1] == '/' || serverdir[serverdir.Length - 1] == '\\')
+							serverdir.Remove(serverdir.Length - 1);
+						config.serverdir = serverdir;
+						config.Save();
+
+						if (FilesSet.CheckFile(config.serverdir + "/kopia.exe"))
+						{
+							enabled = true;
+							CheckAndLoad();
+						}
+						else
+							enabled = false;
+					}
+					else
+						serverdir = config.serverdir;
 				}
-				else
-					enabled = false;
 			}
 			else
-				serverdir = config.serverdir;
-		}
-		EditorGUILayout.EndHorizontal();
+			{
+				GUILayout.Label("<b><size=18><color=green>●</color> <color=cyan>Connected</color></size></b>", style);
+				
+				if (settingsIcon == null)
+				{
+					if (GUILayout.Button("Settings", GUILayout.Width(70)))
+					{
+						preconfig = config.Copy();
+						openMode = oM.settings;
+					}
+				}
+				else
+				{
+					if (GUILayout.Button(new GUIContent(settingsIcon), GUILayout.Width(19), GUILayout.Height(19)))
+					{
+						preconfig = config.Copy();
+						openMode = oM.settings;
+					}
+				}
+			}
 
-		EditorGUILayout.Space();
-		EditorGUILayout.Space();
+			EditorGUILayout.EndHorizontal();
+
+			EditorGUILayout.Space();
+			EditorGUILayout.Space();
+		}
 
 		if (enabled)
 		{
 			if (!working)
 			{
-				if (!fileBrowser)
+				if (openMode == oM.basic)
 				{
 					EditorGUILayout.BeginHorizontal();
 					if (GUILayout.Button("Create new snapshot"))
 					{
 						NewSnapshotAsync();
 					}
+
 					if (refreshIcon == null)
 					{
-						if (GUILayout.Button("Refresh list"))
+						if (GUILayout.Button("Refresh"))
 						{
 							CheckAndLoad();
 						}
@@ -118,6 +248,23 @@ public class KPSL_Editor_Main : EditorWindow
 							CheckAndLoad();
 						}
 					}
+
+					if (consoleIcon == null)
+					{
+						if (GUILayout.Button("Console"))
+						{
+							openMode = oM.console;
+							consoleInput = "";
+						}
+					}
+					else
+					{
+						if (GUILayout.Button(new GUIContent(consoleIcon), GUILayout.Width(19), GUILayout.Height(19)))
+						{
+							openMode=oM.console;
+							consoleInput = "";
+						}
+					}
 					EditorGUILayout.EndHorizontal();
 
 					EditorGUILayout.Space();
@@ -125,7 +272,7 @@ public class KPSL_Editor_Main : EditorWindow
 					snappos = GUILayout.BeginScrollView(snappos, style);
 
 					if (snapshots.Count == 0)
-						GUILayout.Label("There's no snapshots, create one!");
+						GUILayout.Label("There're no snapshots, create one!");
 
 					for (int i = snapshots.Count - 1; i >= 0; i--)
 					{
@@ -141,9 +288,10 @@ public class KPSL_Editor_Main : EditorWindow
 
 							if (GUILayout.Button("Show files"))
 							{
-								fileBrowser = true;
+								openMode = oM.files;
 								fileList = new List<string>();
 								fileList.Add(s.ind);
+								filePos = -1;
 							}
 
 							EditorGUILayout.BeginHorizontal();
@@ -161,28 +309,34 @@ public class KPSL_Editor_Main : EditorWindow
 					}
 					GUILayout.EndScrollView();
 				}
-				else
+				else if (openMode == oM.files)
 				{
 					if (fileList.Count == 1)
 					{
 						if (GUILayout.Button("Close"))
 						{
-							fileBrowser = false;
-							fileList = new List<string>();
+							openMode = oM.basic;
 						}
 					}
 					else
 					{
+						GUILayout.BeginHorizontal();
 						if (GUILayout.Button("To the top"))
 						{
 							fileList.RemoveAt(fileList.Count - 1);
 						}
+						if (GUILayout.Button("Close", GUILayout.Width(50)))
+						{
+							openMode = oM.basic;
+						}
+						GUILayout.EndHorizontal();
 					}
 
 					if (filePos != fileList.Count)
 					{
+						working = true;
+						workingStatus = "Getting list of files";
 						OpenFiles();
-						filePos = fileList.Count;
 					}
 					else
 					{
@@ -191,15 +345,35 @@ public class KPSL_Editor_Main : EditorWindow
 						{
 							EditorGUILayout.BeginHorizontal();
 
+							//gen object size
+							Int64 size = file.size;
+							string typesize = "bytes";
+							if (size/1024 !=0)
+							{
+								typesize = "KB";
+								size /= 1024;
+								if (size / 1024 != 0)
+								{
+									typesize = "MB";
+									size /= 1024;
+									if (size / 1024 != 0)
+									{
+										typesize = "GB";
+										size /= 1024;
+									}
+								}
+							}
+
+							//show object
 							if (file.folder)
 							{
-								if (GUILayout.Button(file.name + " " + file.size))
+								if (GUILayout.Button(file.name + " " + size + " " + typesize))
 								{
 									fileList.Add(file.name);
 								}
 							}
 							else
-								GUILayout.Label(file.name + " " + file.size);
+								GUILayout.Label(file.name + " " + size + " " + typesize);
 
 							if (GUILayout.Button("Restore", GUILayout.Width(100)))
 							{
@@ -218,6 +392,111 @@ public class KPSL_Editor_Main : EditorWindow
 						GUILayout.EndScrollView();
 					}
 				}
+				else if (openMode == oM.settings)
+				{
+					if (GUILayout.Button("Close"))
+					{
+						openMode = oM.basic;
+						config = preconfig.Copy();
+					}
+
+					GUILayout.BeginHorizontal();
+					GUILayout.Label("Path to exe:", GUILayout.Width(200));
+					config.serverdir = EditorGUILayout.TextField("", config.serverdir);
+					GUILayout.EndHorizontal();
+
+					GUILayout.BeginHorizontal();
+					GUILayout.Label("Show .meta files:", GUILayout.Width(200));
+					config.showmeta = EditorGUILayout.Toggle(config.showmeta);
+					GUILayout.EndHorizontal();
+
+					GUILayout.BeginHorizontal();
+					GUILayout.Label("Snapshot only Asset folder:", GUILayout.Width(200));
+					config.snaponlyassets = EditorGUILayout.Toggle(config.snaponlyassets);
+					GUILayout.EndHorizontal();
+
+					GUILayout.BeginHorizontal();
+					GUILayout.Label("Don't rewrite files when restore:", GUILayout.Width(200));
+					config.dontrewrite = EditorGUILayout.Toggle(config.dontrewrite);
+					GUILayout.EndHorizontal();
+
+					if (GUILayout.Button("Save"))
+					{
+						if (!string.IsNullOrEmpty(config.serverdir))
+						{
+							if (config.serverdir[config.serverdir.Length - 1] == '/' || config.serverdir[config.serverdir.Length - 1] == '\\')
+								config.serverdir.Remove(config.serverdir.Length - 1);
+
+							if (FilesSet.CheckFile(config.serverdir + "/kopia.exe"))
+							{
+								enabled = true;
+								CheckAndLoad();
+							}
+							else
+								enabled = false;
+						}
+						else
+							config.serverdir = preconfig.serverdir;
+
+						if (!config.snaponlyassets)
+							datapath = Application.dataPath.Replace("/Assets", "");
+						else
+							datapath = Application.dataPath;
+
+						config.Save();
+						openMode = oM.basic;
+					}
+				}
+				else if (openMode==oM.console)
+				{
+					if (GUILayout.Button("Close"))
+					{
+						openMode = oM.basic;
+					}
+
+					EditorGUILayout.Space();
+
+					GUILayout.BeginHorizontal();
+					consoleInput = EditorGUILayout.TextField("", consoleInput);
+
+					if (GUILayout.Button("Run", GUILayout.Width(40)))
+					{
+						if (!string.IsNullOrEmpty(consoleInput))
+							UnityEngine.Debug.Log(runProc(consoleInput));
+						GUI.FocusControl("");
+					}
+					GUILayout.EndHorizontal();
+
+					EditorGUILayout.Space();
+
+					if (GUILayout.Button("Open Documentation"))
+					{
+						Application.OpenURL("https://kopia.io/docs/reference/command-line/common/");
+					}
+
+					EditorGUILayout.Space();
+
+					//generate help
+					if (string.IsNullOrEmpty(consoleInput) || currHelp != null)
+					{
+						conspos = GUILayout.BeginScrollView(conspos, style);
+
+						foreach (KPSL_Editor_ConsoleHelp c in currHelp.help)
+						{
+							if (GUILayout.Button(c.text))
+							{
+								currHelp = c;
+								consoleInput += c.text + " ";
+								GUI.FocusControl("");
+							}
+						}
+					}
+					GUILayout.EndScrollView();
+
+					if (string.IsNullOrEmpty(consoleInput) && currHelp != consoleHelp)
+						currHelp = consoleHelp;
+
+				}
 			}
 			else
 			{
@@ -226,13 +505,16 @@ public class KPSL_Editor_Main : EditorWindow
 			}
 		}
 		else
+		{
 			GUILayout.Label("Please input path to folder with kopia.exe");
+			if (mainIcon != null)
+				GUILayout.Label(new GUIContent(mainIcon));
+		}
 	}
 
 	async void OpenFiles()
 	{
 		files = new List<KPSL_Editor_File>();
-
 		string id = "";
 		foreach (string s in fileList)
 			id += s + "/";
@@ -240,7 +522,7 @@ public class KPSL_Editor_Main : EditorWindow
 		await Task.Run(() => output = runProc("list -l " + id));
 		foreach (string s in output.Split('\n').ToList())
 		{
-			if (!string.IsNullOrEmpty(s) && !s.Contains(".meta"))
+			if (!string.IsNullOrEmpty(s) && (!s.Contains(".meta") || config.showmeta))
 			{
 				List<string> str = s.Split(" ").ToList();
 
@@ -254,7 +536,7 @@ public class KPSL_Editor_Main : EditorWindow
 				//look for data
 				for (int i = 0; i < str.Count; i++)
 				{
-					if (int.TryParse(str[i], out int r))
+					if (Int64.TryParse(str[i], out Int64 r))
 					{
 						files.Add(new KPSL_Editor_File());
 						files[files.Count - 1].folder = !file;
@@ -283,11 +565,14 @@ public class KPSL_Editor_Main : EditorWindow
 
 		files.Sort((x, y) =>
 		{
-			if (x.name == null && y.name == null) return 0;
-			else if (x.name == null) return -1;
-			else if (y.name == null) return 1;
+			if (x.folder && y.folder) return x.name.CompareTo(y.name);
+			else if (x.folder && !y.folder) return -1;
+			else if (!x.folder && y.folder) return 1;
 			else return x.name.CompareTo(y.name);
 		});
+
+		filePos = fileList.Count;
+		working = false;
 	}
 
 	async void NewSnapshotAsync()
@@ -320,7 +605,7 @@ public class KPSL_Editor_Main : EditorWindow
 		{
 			working = true;
 			workingStatus = "Restoring snapshot " + s.data + " " + s.ind + "...";
-			await Task.Run(() => runProc("snapshot restore " + s.ind + " \"" + datapath + "\" --overwrite-directories --overwrite-files"));
+			await Task.Run(() => runProc("snapshot restore " + s.ind + " \"" + datapath + "\"" + (config.dontrewrite? "" : " --overwrite-directories --overwrite-files")));
 			working = false;
 			CheckAndLoad();
 		}
@@ -333,7 +618,7 @@ public class KPSL_Editor_Main : EditorWindow
 			working = true;
 			workingStatus = "Restoring snapshot file " + filepath + "...";
 			//UnityEngine.Debug.Log("snapshot restore " + "\"" + filepath + "\" \"" + datapath + "/" + realfilepath + "\" --overwrite-directories --overwrite-files");
-			await Task.Run(() => runProc("snapshot restore " + "\"" + filepath + "\" \"" + datapath+"/"+ filepath + "\" --overwrite-directories --overwrite-files"));
+			await Task.Run(() => runProc("snapshot restore " + "\"" + filepath + "\" \"" + datapath+"/"+ realfilepath + "\"" + (config.dontrewrite? "" : " --overwrite-directories --overwrite-files")));
 			working = false;
 			CheckAndLoad();
 		}
@@ -389,10 +674,17 @@ public class KPSL_Editor_Main : EditorWindow
 }
 
 [System.Serializable]
+public class KPSL_Editor_ConsoleHelp
+{
+	public string text;
+	public List<KPSL_Editor_ConsoleHelp> help;
+}
+
+	[System.Serializable]
 public class KPSL_Editor_File
 {
 	public string name;
-	public int size;
+	public Int64 size;
 	public string ind;
 	public bool folder;
 }
@@ -412,6 +704,9 @@ public class KPSL_Editor_Snapshots
 public class KPSL_Editor_MainConfig
 {
 	public string serverdir;
+	public bool showmeta;
+	public bool snaponlyassets;
+	public bool dontrewrite;
 
 	public void Load()
 	{
@@ -419,12 +714,27 @@ public class KPSL_Editor_MainConfig
 		{
 			KPSL_Editor_MainConfig c = JsonUtility.FromJson<KPSL_Editor_MainConfig>(FilesSet.LoadStream(Application.dataPath + "/SLywnowAssets/KopiaUnity/config.cfg", false, false));
 			serverdir = c.serverdir;
+			showmeta = c.showmeta;
+			snaponlyassets = c.snaponlyassets;
+			dontrewrite = c.dontrewrite;
 		}
 	}
 
 	public void Save()
 	{
 		FilesSet.SaveStream(Application.dataPath + "/SLywnowAssets/KopiaUnity/config.cfg", JsonUtility.ToJson(this, true));
+	}
+
+	public KPSL_Editor_MainConfig Copy()
+	{
+		KPSL_Editor_MainConfig ret = new KPSL_Editor_MainConfig();
+
+		ret.serverdir = serverdir;
+		ret.showmeta = showmeta;
+		ret.snaponlyassets = snaponlyassets;
+		ret.dontrewrite = dontrewrite;
+
+		return ret;
 	}
 }
 
