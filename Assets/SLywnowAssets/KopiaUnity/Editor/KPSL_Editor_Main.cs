@@ -158,6 +158,7 @@ public class KPSL_Editor_Main : EditorWindow
 	enum oM { basic, files, settings, console };
 	oM openMode = oM.basic;
 	int filePos;
+	string currentdata;
 	List<string> fileList;
 	List<KPSL_Editor_File> files;
 
@@ -291,6 +292,7 @@ public class KPSL_Editor_Main : EditorWindow
 								openMode = oM.files;
 								fileList = new List<string>();
 								fileList.Add(s.ind);
+								currentdata = s.data.ToString();
 								filePos = -1;
 							}
 
@@ -311,6 +313,14 @@ public class KPSL_Editor_Main : EditorWindow
 				}
 				else if (openMode == oM.files)
 				{
+					string labeltext = currentdata+" ";
+					foreach (string s in fileList)
+						labeltext += s;
+					labeltext = labeltext.Replace(fileList[0], "");
+
+					GUILayout.Label(labeltext);
+					EditorGUILayout.Space();
+
 					if (fileList.Count == 1)
 					{
 						if (GUILayout.Button("Close"))
@@ -331,6 +341,8 @@ public class KPSL_Editor_Main : EditorWindow
 						}
 						GUILayout.EndHorizontal();
 					}
+
+					EditorGUILayout.Space();
 
 					if (filePos != fileList.Count)
 					{
