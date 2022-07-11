@@ -47,3 +47,4 @@ You can enter any kopia commands here, returns will be showed in Unity's console
 - Create system to autorun server
 - Fix bugs
 - Add more console commands in help
+- Add confirm before delete/restore and settings to show it
