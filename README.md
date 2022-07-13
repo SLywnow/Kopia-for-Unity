@@ -4,7 +4,7 @@ Asset for convenient use of [Kopia](https://github.com/kopia/kopia "Kopia") in U
 
 # **How to install**
 1. Launch Kopia GUI or launch Kopia server
-2. Install Asset: merge the Assets folder of your project with the Assets folder of this repository and install [SLywnow basic](https://github.com/SLywnow/slywnow_basic)
+2. Install Asset: open .unitypackage from this repository and install [SLywnow basic](https://github.com/SLywnow/slywnow_basic) same way
 3. Open the SLywnow/Kopia UI window
 4. Set path to kopia.exe file, example: C:\KopiaUI\resources\server (only folder, not file) and press Save & Check
 5. If you set right path and server started, then on top you'll see "Connected" text. Now you're ready to use asset
@@ -22,18 +22,23 @@ You can open additional info about snapshot, also, you can remove or restore thi
 
 ### **File browsing**
 You can see all files and directories in snapshot and their size. You can restore any file or directory by pressing "Restore" button on right. To move back press "To the top" or "Close" on top.
-Also, on top you can see current path.
+Also, on top you can see current path.</br>
+
+Some files (can be setted in settings) can be opend in preview. If it's image, then you can just open preview of this. If it's text and if it's exist in project, you can see difference, otherwise you can open preview too.
 
 ### **While working**
-When asset working all GUI vanishes and you see status of current task
+When asset working all GUI vanishes and you see status of current task.
 
 ### **Settings**
-To open settings click on settings icon on top right
+To open settings click on settings icon on top right.
 
 - Path to exe: path to kopia.exe file, example: C:\KopiaUI\resources\server (only folder, not file) 
 - Show .meta files: shows .meta files in the file browser
 - Snapshot only Asset folder: create snapshot only for Assets folder instead of whole project
 - Don't rewrite files when restore: Only new or deleted files will be writen when you restore data
+- Formats:
+	- Image formats - all formats that will be open as image in image preview
+	- Text formats - all formats that can be open as text in text preview
 
 Save button will save new settings, Cancel will return data back to old config
 
@@ -49,3 +54,4 @@ You can enter any kopia commands here, returns will be showed in Unity's console
 - Fix bugs
 - Add more console commands in help
 - Add confirm before delete/restore and settings to show it
+- Improve previews

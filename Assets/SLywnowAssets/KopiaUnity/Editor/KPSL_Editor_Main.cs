@@ -7,6 +7,7 @@ using UnityEngine;
 using SLywnow;
 using System;
 using System.Threading.Tasks;
+using System.IO;
 
 public class KPSL_Editor_Main : EditorWindow
 {
@@ -152,6 +153,9 @@ public class KPSL_Editor_Main : EditorWindow
 	Vector2 snappos;
 	Vector2 filepos;
 	Vector2 conspos;
+	Vector2 settpos1;
+	string settinput1;
+	string settinput2;
 	bool working;
 	string workingStatus;
 
@@ -164,7 +168,7 @@ public class KPSL_Editor_Main : EditorWindow
 
 	void OnGUI()
 	{
-		GUIStyle style = new GUIStyle();
+		GUIStyle style = new GUIStyle(GUI.skin.label);
 		style.richText = true;
 
 		if (openMode != oM.settings)
@@ -386,6 +390,65 @@ public class KPSL_Editor_Main : EditorWindow
 							}
 							else
 								GUILayout.Label(file.name + " " + size + " " + typesize);
+							{
+								string realfile = "";
+								foreach (string s in fileList)
+									realfile += s + "/";
+								realfile = realfile.Replace(fileList[0], "");
+								realfile += file.name;
+								realfile = Application.dataPath.Replace("Assets", "") + realfile;
+								realfile = realfile.Replace("//", "/");
+								//UnityEngine.Debug.Log(FilesSet.CheckFile(realfile) + " "+ realfile);
+
+								if (config.textFormats != null && config.textFormats.Contains(GetFormat(file.name)))
+								{
+									if (FilesSet.CheckFile(realfile))
+									{
+										if (GUILayout.Button("See diff", GUILayout.Width(100)))
+										{
+											string dir = Application.dataPath.Replace("Assets", "") + "/Temp/KopiaCheck";
+											if (!FilesSet.CheckDirectory(dir))
+												FilesSet.CreateDirectory(dir);
+
+											string path = "";
+											foreach (string s in fileList)
+												path += s + "/";
+											path += file.name;
+											RestoreSnapshotTextCheck(path, dir + "/changed.txt", realfile, dir);
+										}
+									}
+									else
+									{
+										if (GUILayout.Button("Preview", GUILayout.Width(100)))
+										{
+											string dir = Application.dataPath.Replace("Assets", "") + "/Temp/KopiaCheck";
+											if (!FilesSet.CheckDirectory(dir))
+												FilesSet.CreateDirectory(dir);
+
+											string path = "";
+											foreach (string s in fileList)
+												path += s + "/";
+											path += file.name;
+											RestoreSnapshotText(path, dir + "/changed.txt");
+										}
+									}
+								}
+								else if (config.imgFormats != null && config.imgFormats.Contains(GetFormat(file.name)))
+								{
+									if (GUILayout.Button("Preview", GUILayout.Width(100)))
+									{
+										string dir = Application.dataPath.Replace("Assets", "") + "/Temp/KopiaCheck";
+										if (!FilesSet.CheckDirectory(dir))
+											FilesSet.CreateDirectory(dir);
+
+										string path = "";
+										foreach (string s in fileList)
+											path += s + "/";
+										path += file.name;
+										RestoreSnapshotImage(path, dir + "/preview.png");
+									}
+								}
+							}
 
 							if (GUILayout.Button("Restore", GUILayout.Width(100)))
 							{
@@ -406,32 +469,12 @@ public class KPSL_Editor_Main : EditorWindow
 				}
 				else if (openMode == oM.settings)
 				{
+					GUILayout.BeginHorizontal();
 					if (GUILayout.Button("Close"))
 					{
 						openMode = oM.basic;
 						config = preconfig.Copy();
 					}
-
-					GUILayout.BeginHorizontal();
-					GUILayout.Label("Path to exe:", GUILayout.Width(200));
-					config.serverdir = EditorGUILayout.TextField("", config.serverdir);
-					GUILayout.EndHorizontal();
-
-					GUILayout.BeginHorizontal();
-					GUILayout.Label("Show .meta files:", GUILayout.Width(200));
-					config.showmeta = EditorGUILayout.Toggle(config.showmeta);
-					GUILayout.EndHorizontal();
-
-					GUILayout.BeginHorizontal();
-					GUILayout.Label("Snapshot only Asset folder:", GUILayout.Width(200));
-					config.snaponlyassets = EditorGUILayout.Toggle(config.snaponlyassets);
-					GUILayout.EndHorizontal();
-
-					GUILayout.BeginHorizontal();
-					GUILayout.Label("Don't rewrite files when restore:", GUILayout.Width(200));
-					config.dontrewrite = EditorGUILayout.Toggle(config.dontrewrite);
-					GUILayout.EndHorizontal();
-
 					if (GUILayout.Button("Save"))
 					{
 						if (!string.IsNullOrEmpty(config.serverdir))
@@ -458,6 +501,89 @@ public class KPSL_Editor_Main : EditorWindow
 						config.Save();
 						openMode = oM.basic;
 					}
+					GUILayout.EndHorizontal();
+
+					GUILayout.BeginHorizontal();
+					GUILayout.Label("Path to exe:", GUILayout.Width(200));
+					config.serverdir = EditorGUILayout.TextField("", config.serverdir);
+					GUILayout.EndHorizontal();
+
+					GUILayout.BeginHorizontal();
+					GUILayout.Label("Show .meta files:", GUILayout.Width(200));
+					config.showmeta = EditorGUILayout.Toggle(config.showmeta);
+					GUILayout.EndHorizontal();
+
+					GUILayout.BeginHorizontal();
+					GUILayout.Label("Snapshot only Asset folder:", GUILayout.Width(200));
+					config.snaponlyassets = EditorGUILayout.Toggle(config.snaponlyassets);
+					GUILayout.EndHorizontal();
+
+					GUILayout.BeginHorizontal();
+					GUILayout.Label("Don't rewrite files when restore:", GUILayout.Width(200));
+					config.dontrewrite = EditorGUILayout.Toggle(config.dontrewrite);
+					GUILayout.EndHorizontal();
+
+					GUILayout.BeginHorizontal();
+					GUILayout.BeginVertical();
+					GUILayout.Label("Text formats");
+					settpos1 = EditorGUILayout.BeginScrollView(settpos1);
+					if (config.textFormats != null)
+					{
+						for (int i = 0; i < config.textFormats.Count; i++)
+						{
+							int id = i;
+							GUILayout.BeginHorizontal();
+							GUILayout.Label(config.textFormats[id]);
+							if (GUILayout.Button("-", GUILayout.Width(20)))
+							{
+								config.textFormats.RemoveAt(id);
+							}
+							GUILayout.EndHorizontal();
+						}
+					}
+					else 
+						config.textFormats = new List<string>();
+					GUILayout.BeginHorizontal();
+					settinput1 = EditorGUILayout.TextField(settinput1);
+					if (GUILayout.Button("Add", GUILayout.Width(40)))
+					{
+						config.textFormats.Add(settinput1);
+						GUI.FocusControl("");
+						settinput1 = "";
+					}
+					GUILayout.EndHorizontal();
+					EditorGUILayout.EndScrollView();
+					GUILayout.EndVertical();
+					GUILayout.BeginVertical();
+					GUILayout.Label("Image formats");
+					settpos1 = EditorGUILayout.BeginScrollView(settpos1);
+					if (config.imgFormats != null)
+					{
+						for (int i = 0; i < config.imgFormats.Count; i++)
+						{
+							int id = i;
+							GUILayout.BeginHorizontal();
+							GUILayout.Label(config.imgFormats[id]);
+							if (GUILayout.Button("-", GUILayout.Width(20)))
+							{
+								config.imgFormats.RemoveAt(id);
+							}
+							GUILayout.EndHorizontal();
+						}
+					}
+					else config.imgFormats = new List<string>();
+					GUILayout.BeginHorizontal();
+					settinput2 = EditorGUILayout.TextField(settinput2);
+					if (GUILayout.Button("Add", GUILayout.Width(40)))
+					{
+						config.imgFormats.Add(settinput2);
+						settinput2 = "";
+						GUI.FocusControl("");
+					}
+					GUILayout.EndHorizontal();
+					EditorGUILayout.EndScrollView();
+					GUILayout.EndVertical();
+					GUILayout.EndHorizontal();
 				}
 				else if (openMode==oM.console)
 				{
@@ -522,6 +648,34 @@ public class KPSL_Editor_Main : EditorWindow
 			if (mainIcon != null)
 				GUILayout.Label(new GUIContent(mainIcon));
 		}
+	}
+
+	string GetFormat(string input)
+	{
+		string ret = "";
+
+		if (!string.IsNullOrEmpty(input))
+		{
+			for (int i = input.Length-1;i>=0;i--)
+			{
+				if (i == 0) return "";
+				else
+				{
+					ret += input[i];
+					if (input[i] == '.')
+						break;
+				}
+			}
+		}
+
+		return Reverse(ret);
+	}
+
+	static string Reverse(string s)
+	{
+		char[] charArray = s.ToCharArray();
+		Array.Reverse(charArray);
+		return new string(charArray);
 	}
 
 	async void OpenFiles()
@@ -639,6 +793,49 @@ public class KPSL_Editor_Main : EditorWindow
 		}
 	}
 
+	async void RestoreSnapshotTextCheck(string filepath, string realfilepath, string realfile, string dir)
+	{
+		if (!working)
+		{
+			working = true;
+			workingStatus = "Restoring snapshot file " + filepath + "...";
+			//UnityEngine.Debug.Log("snapshot restore " + "\"" + filepath + "\" \"" + datapath + "/" + realfilepath + "\" --overwrite-directories --overwrite-files");
+			await Task.Run(() => runProc("snapshot restore " + "\"" + filepath + "\" \"" + realfilepath + "\" --overwrite-directories --overwrite-files"));
+			
+			working = false;
+			File.Copy(realfile, dir + "/orig.txt", true);
+			EditorWindow.GetWindow(typeof(KPSL_Editor_TextSee), false, "KopiaUni Text Change View", true);
+		}
+	}
+
+	async void RestoreSnapshotImage(string filepath, string realfilepath)
+	{
+		if (!working)
+		{
+			working = true;
+			workingStatus = "Restoring snapshot file " + filepath + "...";
+			//UnityEngine.Debug.Log("snapshot restore " + "\"" + filepath + "\" \"" + datapath + "/" + realfilepath + "\" --overwrite-directories --overwrite-files");
+			await Task.Run(() => runProc("snapshot restore " + "\"" + filepath + "\" \"" + realfilepath + "\" --overwrite-directories --overwrite-files"));
+
+			working = false;
+			EditorWindow.GetWindow(typeof(KPSL_Editor_ImgPrev), false, "KopiaUni Image Preview", true);
+		}
+	}
+
+	async void RestoreSnapshotText(string filepath, string realfilepath)
+	{
+		if (!working)
+		{
+			working = true;
+			workingStatus = "Restoring snapshot file " + filepath + "...";
+			//UnityEngine.Debug.Log("snapshot restore " + "\"" + filepath + "\" \"" + datapath + "/" + realfilepath + "\" --overwrite-directories --overwrite-files");
+			await Task.Run(() => runProc("snapshot restore " + "\"" + filepath + "\" \"" + realfilepath + "\" --overwrite-directories --overwrite-files"));
+
+			working = false;
+			EditorWindow.GetWindow(typeof(KPSL_Editor_TextPreview), false, "KopiaUni Text Preview", true);
+		}
+	}
+
 	string runProc(string args)
 	{
 		string ret = "";
@@ -722,6 +919,8 @@ public class KPSL_Editor_MainConfig
 	public bool showmeta;
 	public bool snaponlyassets;
 	public bool dontrewrite;
+	public List<string> textFormats;
+	public List<string> imgFormats;
 
 	public void Load()
 	{
@@ -732,6 +931,19 @@ public class KPSL_Editor_MainConfig
 			showmeta = c.showmeta;
 			snaponlyassets = c.snaponlyassets;
 			dontrewrite = c.dontrewrite;
+		}
+		else
+		{
+			textFormats = new List<string>();
+			textFormats.Add(".txt");
+			textFormats.Add(".json");
+			textFormats.Add(".cs");
+
+			imgFormats = new List<string>();
+			imgFormats.Add(".png");
+			imgFormats.Add(".jpg");
+			imgFormats.Add(".jpeg");
+			imgFormats.Add(".bmp");
 		}
 	}
 
@@ -748,6 +960,8 @@ public class KPSL_Editor_MainConfig
 		ret.showmeta = showmeta;
 		ret.snaponlyassets = snaponlyassets;
 		ret.dontrewrite = dontrewrite;
+		ret.textFormats = textFormats.Clone();
+		ret.imgFormats = imgFormats.Clone();
 
 		return ret;
 	}
