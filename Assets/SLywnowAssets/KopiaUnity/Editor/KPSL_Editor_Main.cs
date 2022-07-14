@@ -844,7 +844,6 @@ public class KPSL_Editor_Main : EditorWindow
 			StartInfo = new ProcessStartInfo
 			{
 				FileName = config.serverdir + "\\kopia.exe",
-				//Arguments = "snapshot list " + "\"" + Application.dataPath.Replace("/Assets", "") + "\"",
 				Arguments = args,
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
@@ -931,6 +930,8 @@ public class KPSL_Editor_MainConfig
 			showmeta = c.showmeta;
 			snaponlyassets = c.snaponlyassets;
 			dontrewrite = c.dontrewrite;
+			textFormats = c.textFormats;
+			imgFormats = c.imgFormats;
 		}
 		else
 		{
